@@ -81,6 +81,9 @@ func (t mongoTokenizer) Tokenize(s string) string {
 		// We generate a token that is probably, but not guaranteed to be, 
 		// unique by concatenating a string representation of the current 
 		// time with a fully random alphanumeric string.
+		//
+		// TODO: Replace this with code derived from noeqd.
+		//
 		n := time.Now().Nanosecond()
 		token = strconv.Itoa(n)
 		token += goutil.RandAlphanumeric(8, 8)
