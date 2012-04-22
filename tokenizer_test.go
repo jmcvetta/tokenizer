@@ -13,12 +13,12 @@ func TestRoundTrip(t *testing.T) {
 	log.SetFlags(log.Ltime | log.Lshortfile)
 	session, err := mgo.Dial("localhost")
 	if err != nil {
-		t.Error(err)
+		t.Fatal(err)
 	}
 	db := session.DB("test_gokenizer_tokenizer")
 	err = db.DropDatabase()
 	if err != nil {
-		t.Error(err)
+		t.Fatal(err)
 	}
 	tokenizer := NewMongoTokenizer(db)
 	orig := goutil.RandAlphanumeric(8, 8)
