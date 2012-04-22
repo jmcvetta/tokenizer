@@ -16,28 +16,20 @@ import (
 // string cannot be found in the database.
 var TokenNotFound = errors.New("Token Not Found")
 
-// An item of text to be tokenzied, and a channel on a which
-// to return the token.
-type OriginalText struct {
-	text    string      // The original text
-	replyto chan string // Channel on which to return token
-}
-
 // TokenRecord represents a token in the database.
-type TokenRecord struct {
+type tokenRecord struct {
 	Text  string // The original text
 	Token string // A token representing, but not programmatically derived from, the original text
 }
 
 type Tokenizer interface {
-	Tokenize(string) string
-	Detokenize(string) (string, error)
+	Tokenize(string) string            // Get a token
+	Detokenize(string) (string, error) // Get the original text
 }
 
 // MongoTokenizer allows you to tokenize and detokenize strings.
 type mongoTokenizer struct {
 	db *mgo.Database
-	// queue   chan OriginalText
 }
 
 // The MongoDB collection object containing our tokens.
@@ -52,7 +44,7 @@ func (t mongoTokenizer) fetchToken(s string) (string, error) {
 	log.Println("fetchToken:", s)
 	var token string
 	col := t.collection()
-	result := TokenRecord{}
+	result := tokenRecord{}
 	err := col.Find(bson.M{"original": s}).One(&result)
 	if err == nil {
 		token = result.Token
@@ -91,7 +83,7 @@ func (t mongoTokenizer) Tokenize(s string) string {
 		token = strconv.Itoa(n)
 		token += goutil.RandAlphanumeric(8, 8)
 		token = base64.StdEncoding.EncodeToString([]byte(token))
-		trec := TokenRecord{
+		trec := tokenRecord{
 			Text:  s,
 			Token: token,
 		}
@@ -126,7 +118,7 @@ func (t mongoTokenizer) Detokenize(s string) (string, error) {
 	var orig string
 	var err error
 	col := t.collection()
-	result := TokenRecord{}
+	result := tokenRecord{}
 	query := col.Find(bson.M{"token": s})
 	switch db_err := query.One(&result); true {
 	case db_err == mgo.NotFound:
