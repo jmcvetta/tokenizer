@@ -1,119 +1,24 @@
-# Gokenizer
+# tokenizer - A data tokenization service
 
-Gokenizer presents a websocket API for tokenizing and detokenizing arbitrary
-data, represented as JSON key/value pairs.
+# License
 
+Copyright (C) 2012 Jason McVetta
 
-## Installation
+Permission is hereby granted, free of charge, to any person obtaining a copy of
+this software and associated documentation files (the "Software"), to deal in
+the Software without restriction, including without limitation the rights to
+use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies
+of the Software, and to permit persons to whom the Software is furnished to do
+so, subject to the following conditions:
 
-### MongoDB
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
 
-Gokenizer uses MongoDB as a datastore.  Installation instructions for MongoDB
-can be [found here](http://www.mongodb.org/display/DOCS/Quickstart).
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.
 
-Currently Gokenizer connects to MongoDB with no security.  This will be
-improved in a future version.
-
-### Go Language
-
-A working installation of [Go](http://golang.org) version 1 is required to
-compile Gokenizer.  See the Go [Getting Started](http://golang.org/doc/install)
-page for complete instructions.
-
-### Gokenizer
-
-	cd $YOUR_WORKSPACE
-	git clone git://github.com/jmcvetta/gokenizer.git
-	cd gokenizer
-	# "go install" may require superuser permissions, depending on how Go
-	# is installed on your system.
-	go install gokenizer.go 
-
-
-## Usage
-
-### Run Gokenizer
-
-By default Gokenizer connects to MongoDB on localhost over the default port,
-and listens for websocket connections on ws://localhost:3000.  These can be
-changed with command line flags:
-
-	$ ./gokenizer -help
-	Usage of ./gokenizer:
-	  -mongo="localhost": URL of MongoDB server
-	  -url="localhost:3000": Host/port on which to run websocket listener
-
-### Connect
-
-Connect to Gokenizer with a websocket client.  You can use [Echo
-Test](http://websocket.org/echo.html) to experiment.
-
-### Tokenize
-
-Connect to the websocket:
-
-	ws://localhost:3000/v1/tokenize
-
-Issue a JSON request:
-
-	{
-		"ReqId": "an arbitrary string identifying this request",
-		"Data": {
-			"fieldname1": "fieldvalue1",
-			"field name 2": "field  value 2"
-		}
-	}
-
-Response:
-
-	{
-		"ReqId": "an arbitrary string identifying this request",
-		"Status": "Success",
-		"Error": "",
-		"Data": {
-			"field name 2": "OTMyMzgzMDAw",
-			"fieldname1": "OTMwMjkxMDAw"
-		}
-	}
-
-### Detokenize
-
-Connect to the websocket:
-
-	ws://localhost:3000/v1/detokenize
-
-Issue a JSON request:
-
-	{
-		"ReqId": "foobar",
-		"Data": {
-			"field name 2": "OTMyMzgzMDAw",
-			"fieldname1": "OTMwMjkxMDAw",
-			"fieldname 3": "non-existent token string"
-		}
-	}
-
-Response:
-
-	{
-		"ReqId": "foobar",
-		"Status": "Success", 
-		"Error": "",
-		"Data": {
-			"field name 2": {
-				"Token": "OTMyMzgzMDAw",
-				"Found":true,
-				"Text": "field value 2"
-			},
-			"fieldname1": {
-				"Token": "OTMwMjkxMDAw",
-				"Found":true,
-				"Text":"fieldvalue1"
-			},
-			"fieldname 3": {
-				"Token":"non-existent token string",
-				"Found": false,
-				"Text":""
-			}
-		}
-	}

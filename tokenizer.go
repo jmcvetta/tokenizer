@@ -1,32 +1,4 @@
-/*
-                                   Gokenizer
-                               A Data Tokenizer
-
-
-@author: Jason McVetta <jason.mcvetta@gmail.com>
-@copyright: (c) 2012 Jason McVetta
-@license: GPL v3 - http://www.gnu.org/copyleft/gpl.html
-
-********************************************************************************
-Gokenizer is free software: you can redistribute it and/or modify it under the
-terms of the GNU General Public License as published by the Free Software
-Foundation, either version 3 of the License, or (at your option) any later
-version.
-
-Gokenizer is distributed in the hope that it will be useful, but WITHOUT ANY
-WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A
-PARTICULAR PURPOSE.  See the GNU General Public License for more details.
-
-You should have received a copy of the GNU General Public License along with
-Gokenizer.  If not, see <http://www.gnu.org/licenses/>.
-********************************************************************************
-
-*/
-
-/*
-	Package tokenizer provided functionality to tokenize and detokenize
-	arbitrary strings using a MongoDB database.
-*/
+// Package tokenizer implements a data tokenization service.
 package tokenizer
 
 import (
@@ -63,20 +35,20 @@ type Tokenizer interface {
 }
 
 // MongoTokenizer allows you to tokenize and detokenize strings.
-type MongoTokenizer struct {
+type mongoTokenizer struct {
 	db *mgo.Database
 	// queue   chan OriginalText
 }
 
 // The MongoDB collection object containing our tokens.
-func (t MongoTokenizer) collection() *mgo.Collection {
+func (t mongoTokenizer) collection() *mgo.Collection {
 	// lightweight operation, involves no network communication
 	col := t.db.C("tokens")
 	return col
 }
 
 // Fetches the token for string s from the database.
-func (t MongoTokenizer) fetchToken(s string) (string, error) {
+func (t mongoTokenizer) fetchToken(s string) (string, error) {
 	log.Println("fetchToken:", s)
 	var token string
 	col := t.collection()
@@ -90,7 +62,7 @@ func (t MongoTokenizer) fetchToken(s string) (string, error) {
 
 // Tokenize accepts a string and returns a token string which represents, 
 // but has no programmatic relationship to, the original string.
-func (t MongoTokenizer) Tokenize(s string) string {
+func (t mongoTokenizer) Tokenize(s string) string {
 	log.Println("Tokenize:", s)
 	var token string
 	col := t.collection()
@@ -148,7 +120,7 @@ func (t MongoTokenizer) Tokenize(s string) string {
 	return token
 }
 
-func (t MongoTokenizer) Detokenize(s string) (string, error) {
+func (t mongoTokenizer) Detokenize(s string) (string, error) {
 	log.Println("Detokenize:", s)
 	log.Println("  Token:      " + s)
 	var orig string
@@ -190,7 +162,7 @@ func NewMongoTokenizer(db *mgo.Database) Tokenizer {
 	//
 	// Initialize tokenizer
 	//
-	t := MongoTokenizer{
+	t := mongoTokenizer{
 		db: db,
 	}
 	return t
