@@ -16,15 +16,17 @@ import (
 // string cannot be found in the database.
 var TokenNotFound = errors.New("Token Not Found")
 
-// TokenRecord represents a token in the database.
-type tokenRecord struct {
-	Text  string // The original text
-	Token string // A token representing, but not programmatically derived from, the original text
-}
-
+// Tokenizer generates tokens that represent, but are not programmatically 
+// derived from, original text.
 type Tokenizer interface {
 	Tokenize(string) string            // Get a token
 	Detokenize(string) (string, error) // Get the original text
+}
+
+// TokenRecord represents a token in the database.
+type tokenRecord struct {
+	Text  string
+	Token string
 }
 
 // MongoTokenizer allows you to tokenize and detokenize strings.
@@ -134,6 +136,7 @@ func (t mongoTokenizer) Detokenize(s string) (string, error) {
 	return orig, err
 }
 
+// NewMongoTokenizer returns a Tokenizer backed by a MongDB database
 func NewMongoTokenizer(db *mgo.Database) Tokenizer {
 	//
 	// Setup database.  If DB is already setup, this is a noop.
