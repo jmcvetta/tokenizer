@@ -1,4 +1,4 @@
-# tokenizer - A data tokenization service
+# tokenizer - A data tokenization library
 
 # License
 

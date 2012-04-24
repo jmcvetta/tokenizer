@@ -1,3 +1,6 @@
+// Copyright 2012 Jason McVetta.  This is Free Software, released under the 
+// terms of the GNU Public License version 3.
+
 // Package tokenizer implements a data tokenization service.
 package tokenizer
 
