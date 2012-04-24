@@ -4,12 +4,11 @@ package tokenizer
 import (
 	"encoding/base64"
 	"errors"
-	"github.com/jmcvetta/goutil"
+	"github.com/jmcvetta/guid"
 	"launchpad.net/mgo"
 	"launchpad.net/mgo/bson"
 	"log"
-	"strconv"
-	"time"
+	"fmt"
 )
 
 // A TokenNotFound error is returned by GetOriginal if the supplied token 
@@ -82,12 +81,16 @@ func (t mongoTokenizer) Tokenize(s string) string {
 		// unique by concatenating a string representation of the current 
 		// time with a fully random alphanumeric string.
 		//
-		// TODO: Replace this with code derived from noeqd.
+		// TODO: Instead of using top-level NextId(), each Tokenizer should 
+		// have its own guid.Generator, which can be configurable with 
+		// datacenter & worker IDs
 		//
-		n := time.Now().Nanosecond()
-		token = strconv.Itoa(n)
-		token += goutil.RandAlphanumeric(8, 8)
-		token = base64.StdEncoding.EncodeToString([]byte(token))
+		guid, err := guid.NextId()
+		if err != nil {
+			log.Panic(err)
+		}
+		guidstr := fmt.Sprintf("%v", guid)
+		token = base64.StdEncoding.EncodeToString([]byte(guidstr))
 		trec := tokenRecord{
 			Text:  s,
 			Token: token,
