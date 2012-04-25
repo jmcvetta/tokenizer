@@ -7,11 +7,11 @@ package tokenizer
 import (
 	"encoding/base64"
 	"errors"
+	"fmt"
 	"github.com/jmcvetta/guid"
 	"launchpad.net/mgo"
 	"launchpad.net/mgo/bson"
 	"log"
-	"fmt"
 )
 
 // A TokenNotFound error is returned by GetOriginal if the supplied token 
@@ -25,7 +25,7 @@ type Tokenizer interface {
 	Detokenize(string) (string, error) // Get the original text
 }
 
-// TokenRecord represents a token in the database.
+// tokenRecord represents a token in the database.
 type tokenRecord struct {
 	Text  string
 	Token string
@@ -36,7 +36,7 @@ type mongoTokenizer struct {
 	db *mgo.Database
 }
 
-// The MongoDB collection object containing our tokens.
+// Get the MongoDB collection object containing our tokens.
 func (t mongoTokenizer) collection() *mgo.Collection {
 	// lightweight operation, involves no network communication
 	col := t.db.C("tokens")
@@ -56,8 +56,6 @@ func (t mongoTokenizer) fetchToken(s string) (string, error) {
 	return token, err
 }
 
-// Tokenize accepts a string and returns a token string which represents, 
-// but has no programmatic relationship to, the original string.
 func (t mongoTokenizer) Tokenize(s string) string {
 	log.Println("Tokenize:", s)
 	var token string
@@ -80,13 +78,11 @@ func (t mongoTokenizer) Tokenize(s string) string {
 		//
 		// No existing token found, so generate a new token
 		//
-		// We generate a token that is probably, but not guaranteed to be, 
-		// unique by concatenating a string representation of the current 
-		// time with a fully random alphanumeric string.
-		//
 		// TODO: Instead of using top-level NextId(), each Tokenizer should 
 		// have its own guid.Generator, which can be configurable with 
-		// datacenter & worker IDs
+		// datacenter & worker IDs.  Once that is in place we should be 
+		// guaranteed against guid collision even when running multiple
+		// uncoordinated tokenizers.
 		//
 		guid, err := guid.NextId()
 		if err != nil {
@@ -105,20 +101,17 @@ func (t mongoTokenizer) Tokenize(s string) string {
 			log.Println("New token:", token)
 			break
 		}
+		// MongoDB error code 11000 = duplicate key error Either the token or
+		// the original are already in the DB, possibly put there by a
+		// different tokenizer process.  The original may have already been 
+		// tokenized by another process, or (less likely) there may have been a 
+		// guid collision.  Either way, let's try again.
 		if e, ok := err.(*mgo.LastError); ok && e.Code == 11000 {
-			// MongoDB error code 11000 = duplicate key error
-			// Either the token or the original are already in the DB, 
-			// possibly put there by a different tokenizer process.
-			// 
-			// It would probably be better to interpret the text of the
-			// Mongo error message to find out which field is a duplicate.
-			// For now, we are just going to try fetchToken() for our string,
-			// and if that fails try a new token.
 			log.Println("Duplicate key")
 			log.Println(e)
 			continue
 		}
-		log.Panic(err)
+		log.Panic(err) // Unknown err from mongo insert
 	}
 	return token
 }
