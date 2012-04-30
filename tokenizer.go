@@ -21,7 +21,7 @@ var TokenNotFound = errors.New("Token Not Found")
 // Tokenizer generates tokens that represent, but are not programmatically 
 // derived from, original text.
 type Tokenizer interface {
-	Tokenize(string) string            // Get a token
+	Tokenize(string) (string, error)   // Get a token
 	Detokenize(string) (string, error) // Get the original text
 }
 
@@ -56,23 +56,25 @@ func (t mongoTokenizer) fetchToken(s string) (string, error) {
 	return token, err
 }
 
-func (t mongoTokenizer) Tokenize(s string) string {
+func (t mongoTokenizer) Tokenize(s string) (string, error) {
 	log.Println("Tokenize:", s)
-	var token string
+	var result string
+	var err error
 	col := t.collection()
 	for {
-		var err error
 		// 
 		// First check for an existing token
 		//
+		var token string
 		token, err = t.fetchToken(s)
 		if err == nil {
 			log.Println("Existing token:", token)
+			result = token
 			break
 		}
 		if err != mgo.NotFound {
 			// NotFound is harmless - anything else is WTF
-			log.Panic(err)
+			break // Will return a nil result and a non-nil error
 		}
 		log.Println("No existing token.")
 		//
@@ -85,6 +87,9 @@ func (t mongoTokenizer) Tokenize(s string) string {
 		// uncoordinated tokenizers.
 		//
 		guid, err := guid.NextId()
+		// We return MongoDB errors because the caller might reasonably want
+		// to deal with them.  However the caller almost certainly can't deal
+		// with an error caused by guid.NextId().
 		if err != nil {
 			log.Panic(err)
 		}
@@ -99,6 +104,9 @@ func (t mongoTokenizer) Tokenize(s string) string {
 		if err == nil {
 			// Success!
 			log.Println("New token:", token)
+			result = token
+			log.Println("foobar!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!")
+			log.Println(err)
 			break
 		}
 		// MongoDB error code 11000 = duplicate key error Either the token or
@@ -111,9 +119,9 @@ func (t mongoTokenizer) Tokenize(s string) string {
 			log.Println(e)
 			continue
 		}
-		log.Panic(err) // Unknown err from mongo insert
+		break // Will return a nil result and a non-nil error
 	}
-	return token
+	return result, err
 }
 
 func (t mongoTokenizer) Detokenize(s string) (string, error) {

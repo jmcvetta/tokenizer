@@ -14,9 +14,10 @@ import (
 // Tests tokenization 
 func TestRoundTrip(t *testing.T) {
 	log.SetFlags(log.Ltime | log.Lshortfile)
+	var token string
 	session, err := mgo.Dial("localhost")
 	if err != nil {
-		t.Fatal(err)
+		t.Fatal("Could not connect to MongoDB:", err)
 	}
 	db := session.DB("test_gokenizer_tokenizer")
 	err = db.DropDatabase()
@@ -25,11 +26,14 @@ func TestRoundTrip(t *testing.T) {
 	}
 	tokenizer := NewMongoTokenizer(db)
 	orig := goutil.RandAlphanumeric(8, 8)
-	token := tokenizer.Tokenize(orig)
+	token, err = tokenizer.Tokenize(orig)
+	if err != nil {
+		t.Error("Tokenize error:", err)
+	}
 	var detok string // Result of detokenization - should be same as orig
 	detok, err = tokenizer.Detokenize(token)
 	if err != nil {
-		t.Error(err)
+		t.Error("Detokenize error:", err)
 	}
 	if detok != orig {
 		msg := "Detokenization failed: '%s' != '%s'."
@@ -44,22 +48,25 @@ func BenchmarkRoundTrip(b *testing.B) {
 	log.SetFlags(log.Ltime | log.Lshortfile)
 	session, err := mgo.Dial("localhost")
 	if err != nil {
-		b.Error(err)
+		b.Fatal("Could not connect to MongoDB:", err)
 	}
 	db := session.DB("test_gokenizer_tokenizer")
 	err = db.DropDatabase()
 	if err != nil {
-		b.Error(err)
+		b.Fatal("Could not drop test db:", err)
 	}
 	tokenizer := NewMongoTokenizer(db)
 	b.StartTimer()
 	for i := 0; i < b.N; i++ {
 		orig := goutil.RandAlphanumeric(8, 8)
-		token := tokenizer.Tokenize(orig)
+		token, err := tokenizer.Tokenize(orig)
+		if err != nil {
+			b.Error("Tokenize error:", err)
+		}
 		var detok string // Result of detokenization - should be same as orig
 		detok, err = tokenizer.Detokenize(token)
 		if err != nil {
-			b.Error(err)
+			b.Error("Detokenize error:", err)
 		}
 		if detok != orig {
 			msg := "Detokenization failed: '%s' != '%s'."
