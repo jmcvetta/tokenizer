@@ -58,14 +58,15 @@ func (t mongoTokenizer) fetchToken(s string) (string, error) {
 
 func (t mongoTokenizer) Tokenize(s string) (string, error) {
 	log.Println("Tokenize:", s)
-	var result string
-	var err error
+	var result string // Result string
+	var rerr error    // Result error
 	col := t.collection()
 	for {
 		// 
 		// First check for an existing token
 		//
 		var token string
+		var err error
 		token, err = t.fetchToken(s)
 		if err == nil {
 			log.Println("Existing token:", token)
@@ -74,7 +75,9 @@ func (t mongoTokenizer) Tokenize(s string) (string, error) {
 		}
 		if err != mgo.NotFound {
 			// NotFound is harmless - anything else is WTF
-			break // Will return a nil result and a non-nil error
+			log.Println("Returning unexpected MongoDB error:", err)
+			rerr = err
+			break
 		}
 		log.Println("No existing token.")
 		//
@@ -86,14 +89,15 @@ func (t mongoTokenizer) Tokenize(s string) (string, error) {
 		// guaranteed against guid collision even when running multiple
 		// uncoordinated tokenizers.
 		//
-		guid, err := guid.NextId()
+		var id int64
+		id, err = guid.NextId()
 		// We return MongoDB errors because the caller might reasonably want
 		// to deal with them.  However the caller almost certainly can't deal
 		// with an error caused by guid.NextId().
 		if err != nil {
 			log.Panic(err)
 		}
-		guidstr := fmt.Sprintf("%v", guid)
+		guidstr := fmt.Sprintf("%v", id)
 		token = base64.StdEncoding.EncodeToString([]byte(guidstr))
 		trec := tokenRecord{
 			Text:  s,
@@ -117,9 +121,10 @@ func (t mongoTokenizer) Tokenize(s string) (string, error) {
 			log.Println(e)
 			continue
 		}
-		break // Will return a nil result and a non-nil error
+		rerr = err
+		break
 	}
-	return result, err
+	return result, rerr
 }
 
 func (t mongoTokenizer) Detokenize(s string) (string, error) {
