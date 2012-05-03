@@ -105,8 +105,6 @@ func (t mongoTokenizer) Tokenize(s string) (string, error) {
 			// Success!
 			log.Println("New token:", token)
 			result = token
-			log.Println("foobar!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!")
-			log.Println(err)
 			break
 		}
 		// MongoDB error code 11000 = duplicate key error Either the token or
