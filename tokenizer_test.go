@@ -30,6 +30,14 @@ func TestRoundTrip(t *testing.T) {
 	if err != nil {
 		t.Error("Tokenize error:", err)
 	}
+	var repeat string
+	repeat, err = tokenizer.Tokenize(orig)
+	if err != nil {
+		t.Error("Tokenize error:", err)
+	}
+	if repeat != token {
+		t.Error("Got a different token on second try:", orig, token, repeat)
+	}
 	var detok string // Result of detokenization - should be same as orig
 	detok, err = tokenizer.Detokenize(token)
 	if err != nil {
