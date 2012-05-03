@@ -49,7 +49,7 @@ func (t mongoTokenizer) fetchToken(s string) (string, error) {
 	var token string
 	col := t.collection()
 	result := tokenRecord{}
-	err := col.Find(bson.M{"original": s}).One(&result)
+	err := col.Find(bson.M{"text": s}).One(&result)
 	if err == nil {
 		token = result.Token
 	}
