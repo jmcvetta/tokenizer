@@ -14,8 +14,8 @@ import (
 	"log"
 )
 
-// A TokenNotFound error is returned by GetOriginal if the supplied token 
-// string cannot be found in the database.
+// TokenNotFound error is returned by Detokenize if the supplied token string 
+// cannot be found in the database.
 var TokenNotFound = errors.New("Token Not Found")
 
 // Tokenizer generates tokens that represent, but are not programmatically 
