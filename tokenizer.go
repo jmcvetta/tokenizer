@@ -5,7 +5,6 @@
 package tokenizer
 
 import (
-	"encoding/base64"
 	"errors"
 	"fmt"
 	"github.com/jmcvetta/guid"
@@ -97,8 +96,7 @@ func (t mongoTokenizer) Tokenize(s string) (string, error) {
 		if err != nil {
 			log.Panic(err)
 		}
-		guidstr := fmt.Sprintf("%v", id)
-		token = base64.StdEncoding.EncodeToString([]byte(guidstr))
+		token = fmt.Sprintf("%v", id)
 		trec := tokenRecord{
 			Text:  s,
 			Token: token,
