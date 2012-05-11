@@ -15,6 +15,7 @@ import (
 func TestRoundTrip(t *testing.T) {
 	log.SetFlags(log.Ltime | log.Lshortfile)
 	var token string
+	log.Println("Connecting to MongoDB...")
 	session, err := mgo.Dial("localhost")
 	if err != nil {
 		t.Fatal("Could not connect to MongoDB:", err)
